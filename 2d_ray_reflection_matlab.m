@@ -1,0 +1,68 @@
+% Ray Tracing – Basic Reflection
+clc; clear;
+
+% Starting point and direction
+origin = [0, 0];
+theta_deg = input('What is the incident angle (in degrees): '); % incident angle (degrees)
+theta = deg2rad(theta_deg); % convert degrees to radians
+
+% This line creates the direction vector of the ray using the angle
+% x and y components of the vector are assigned respectively
+ray_dir = [cos(theta), sin(theta)];
+
+% Mirror definition: two points
+mirror_start = [2, 1];
+mirror_end   = [6, 1];
+
+% Mirror vector and normal
+
+% mirror_vec = [6 1] - [2 1] = [4 0]
+% This shows the mirror is horizontal and directed to the right
+mirror_vec = mirror_end - mirror_start;
+
+% mirror_unit = mirror_vec / norm(mirror_vec);
+% This normalizes the mirror vector (makes its length 1), giving the unit direction vector of the mirror
+% Example: norm([4 0]) = 4 ; mirror_unit = [4 0] / 4 = [1 0]
+mirror_unit = mirror_vec / norm(mirror_vec);
+
+% For vector [x,y], perpendicular vectors are:
+% [-y,x] → counterclockwise perpendicular
+% [y,-x] → clockwise perpendicular
+normal = [-mirror_unit(2), mirror_unit(1)];  % normal facing clockwise
+
+% Intersection point between the ray and the mirror
+% Ray: r(t) = origin + t * ray_dir
+% Mirror: L(s) = mirror_start + s * mirror_vec
+
+% Set up the system for solving the intersection
+% This creates a 2x2 matrix by placing two 2x1 column vectors side by side:
+A = [ray_dir' -mirror_vec']; % ' operator is transpose
+b = (mirror_start - origin)';
+ts = A\b;  % t = ts(1), s = ts(2)
+
+if all(ts >= 0) && ts(2) <= 1
+    intersection = origin + ts(1) * ray_dir;
+    
+    % Calculate the reflected ray
+    inc_vec = ray_dir / norm(ray_dir); % unit incident vector
+    refl_vec = inc_vec - 2 * dot(inc_vec, normal) * normal;
+    
+    % Visualization
+    figure; hold on; axis equal
+    xlim([-1, 8]); ylim([-1, 5])
+    
+    % Draw the mirror
+    plot([mirror_start(1), mirror_end(1)], [mirror_start(2), mirror_end(2)], 'k-', 'LineWidth', 2)
+    
+    % Draw the incident ray
+    plot([origin(1), intersection(1)], [origin(2), intersection(2)], 'b', 'LineWidth', 2)
+    
+    % Draw the reflected ray
+    refl_end = intersection + 5 * refl_vec;
+    plot([intersection(1), refl_end(1)], [intersection(2), refl_end(2)], 'r', 'LineWidth', 2)
+
+    legend('Mirror', 'Incident Ray', 'Reflected Ray')
+    title('2D Basic Ray Tracing – Reflection')
+else
+    disp('The ray does not hit the mirror.')
+end
